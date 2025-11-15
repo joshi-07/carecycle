@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 const api = axios.create({
-  baseURL: process.env.REACT_APP_API_BASE_URL || 'https://carecycle-backend.onrender.com/api',
+  baseURL: process.env.REACT_APP_API_BASE_URL || 'https://carecycle-2.onrender.com/api',
   headers: {
     'Content-Type': 'application/json',
   },

@@ -20,7 +20,7 @@ A full-stack web app that connects people with unused valid medicines to verifie
 - **Build Command:** `npm run build`
 - **Publish Directory:** `build`
 - **Environment Variables:**
-  - `REACT_APP_API_BASE_URL`: `https://carecycle-backend.onrender.com/api` (after backend deployment)
+  - `REACT_APP_API_BASE_URL`: `https://carecycle-2.onrender.com/api` (after backend deployment)
 
 ### Environment Files
 - **Backend `.env`**: Contains `MONGODB_URI` and `FRONTEND_URL`
