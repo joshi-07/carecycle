@@ -22,6 +22,10 @@ A full-stack web app that connects people with unused valid medicines to verifie
 - **Environment Variables:**
   - `REACT_APP_API_BASE_URL`: `https://carecycle-backend.onrender.com/api` (after backend deployment)
 
+### Environment Files
+- **Backend `.env`**: Contains `MONGODB_URI` and `FRONTEND_URL`
+- **Frontend `.env`**: Contains `REACT_APP_API_BASE_URL`
+
 ### Database
 - Use MongoDB Atlas for production
 - Create a cluster and get the connection string
