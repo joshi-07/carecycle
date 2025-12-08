@@ -4,7 +4,10 @@ import { getDonations, verifyDonation as verifyDonationApi } from '../services/a
 const Dashboard = () => {
   const [donations, setDonations] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [stats, setStats] = useState({ total: 0, verified: 0, pending: 0, amount: 0 });
+  const [isAdmin, setIsAdmin] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [selectedDonation, setSelectedDonation] = useState(null);
+  const [stats, setStats] = useState({ total: 0, verified: 0, pending: 0, unopened: 0 });
 
   useEffect(() => {
     fetchDonations();
@@ -39,6 +42,22 @@ const Dashboard = () => {
     }
   };
 
+  const handleDeleteClick = (donation) => {
+    setSelectedDonation(donation);
+    setShowDeleteModal(true);
+  };
+
+  const confirmDelete = async () => {
+    try {
+      // Add your delete API call here when ready
+      console.log('Deleting donation:', selectedDonation._id);
+      setShowDeleteModal(false);
+      fetchDonations();
+    } catch (error) {
+      console.error('Error deleting donation:', error);
+    }
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -48,10 +67,24 @@ const Dashboard = () => {
   }
 
   return (
-    <div className="max-w-7xl mx-auto py-16 px-4 sm:px-6 lg:px-8">
-      <div className="mb-12">
-        <h2 className="text-4xl font-bold text-gray-900 mb-4">Tablet Donation Dashboard</h2>
-        <p className="text-lg text-gray-600">Track and manage all tablet donations in one place</p>
+    <div className="max-w-7xl mx-auto py-8 sm:py-12 px-4 sm:px-6 lg:px-8">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8">
+        <div>
+          <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-2">Tablet Donation Dashboard</h2>
+          <p className="text-gray-600">Track and manage all tablet donations in one place</p>
+        </div>
+        <div className="mt-4 sm:mt-0">
+          <button
+            onClick={() => setIsAdmin(!isAdmin)}
+            className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+              isAdmin 
+                ? 'bg-red-600 text-white hover:bg-red-700' 
+                : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+            }`}
+          >
+            {isAdmin ? 'Exit Admin Mode' : 'Admin Mode'}
+          </button>
+        </div>
       </div>
 
       {/* Stats Cards */}
@@ -129,7 +162,7 @@ const Dashboard = () => {
         ) : (
           <ul className="divide-y divide-gray-200">
             {donations.map((donation) => (
-              <li key={donation._id} className="px-6 py-6 hover:bg-gray-50 transition-colors">
+              <li key={donation._id} className="px-4 sm:px-6 py-4 hover:bg-gray-50 transition-colors border-b border-gray-100 last:border-0">
                 <div className="flex items-center justify-between">
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center">
@@ -142,37 +175,47 @@ const Dashboard = () => {
                         <p className="text-sm text-gray-500 truncate">{donation.tabletName} - Expires: {new Date(donation.expiryDate).toLocaleDateString()}</p>
                       </div>
                     </div>
-                    <div className="mt-2 flex items-center text-sm text-gray-500">
-                      <svg className="flex-shrink-0 mr-1.5 h-4 w-4 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
-                        <path fillRule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z" clipRule="evenodd" />
-                      </svg>
-                      {new Date(donation.createdAt).toLocaleDateString('en-US', {
-                        year: 'numeric',
-                        month: 'short',
-                        day: 'numeric'
-                      })}
-                    </div>
-                  </div>
-                  <div className="flex items-center space-x-4">
-                    <div className="text-right">
-                      <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium ${
+                    <div className="mt-2 flex flex-wrap gap-2 items-center">
+                      <span className="inline-flex items-center text-xs text-gray-500 bg-gray-50 px-2 py-1 rounded">
+                        <svg className="flex-shrink-0 mr-1 h-3 w-3 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
+                          <path fillRule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z" clipRule="evenodd" />
+                        </svg>
+                        {new Date(donation.createdAt).toLocaleDateString('en-US', {
+                          year: 'numeric',
+                          month: 'short',
+                          day: 'numeric'
+                        })}
+                      </span>
+                      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
                         donation.unopened ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'
                       }`}>
                         {donation.unopened ? 'Unopened' : 'Opened'}
                       </span>
+                      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                        donation.verified ? 'bg-blue-100 text-blue-800' : 'bg-yellow-100 text-yellow-800'
+                      }`}>
+                        {donation.verified ? 'Verified' : 'Pending'}
+                      </span>
                     </div>
-                    <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium ${
-                      donation.verified ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'
-                    }`}>
-                      {donation.verified ? 'Verified' : 'Pending'}
-                    </span>
-                    {!donation.verified && (
-                      <button
-                        onClick={() => verifyDonation(donation._id)}
-                        className="bg-gradient-to-r from-indigo-600 to-purple-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:from-indigo-700 hover:to-purple-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition-all duration-200 transform hover:scale-105"
-                      >
-                        Verify
-                      </button>
+                  </div>
+                  <div className="flex items-center space-x-4">
+                    {isAdmin && (
+                      <div className="flex space-x-2">
+                        {!donation.verified && (
+                          <button
+                            onClick={() => verifyDonation(donation._id)}
+                            className="bg-gradient-to-r from-green-600 to-green-700 text-white px-3 py-1.5 rounded-md text-sm font-medium hover:from-green-700 hover:to-green-800 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 transition-all duration-150"
+                          >
+                            Verify
+                          </button>
+                        )}
+                        <button
+                          onClick={() => handleDeleteClick(donation)}
+                          className="bg-red-100 text-red-700 px-3 py-1.5 rounded-md text-sm font-medium hover:bg-red-200 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 transition-all duration-150"
+                        >
+                          Delete
+                        </button>
+                      </div>
                     )}
                   </div>
                 </div>
@@ -181,6 +224,33 @@ const Dashboard = () => {
           </ul>
         )}
       </div>
+
+      {/* Delete Confirmation Modal */}
+      {showDeleteModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-xl shadow-xl max-w-md w-full p-6">
+            <h3 className="text-lg font-semibold text-gray-900 mb-2">Delete Donation</h3>
+            <p className="text-gray-600 mb-6">
+              Are you sure you want to delete the donation from {selectedDonation?.donorName}?
+              This action cannot be undone.
+            </p>
+            <div className="flex justify-end space-x-3">
+              <button
+                onClick={() => setShowDeleteModal(false)}
+                className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-md hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={confirmDelete}
+                className="px-4 py-2 text-sm font-medium text-white bg-red-600 rounded-md hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
+              >
+                Delete
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
