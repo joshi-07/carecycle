@@ -9,7 +9,7 @@ A full-stack web app that connects people with unused valid medicines to verifie
 ### Backend (Render)
 - **Service:** Web Service
 - **Runtime:** Node.js
-- **Build Command:** `npm install`
+- **Build Command:** `npm install` 
 - **Start Command:** `npm start`
 - **Environment Variables:**
   - `MONGODB_URI`: Your MongoDB Atlas connection string
