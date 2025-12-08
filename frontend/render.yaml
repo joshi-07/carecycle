@@ -1,0 +1,14 @@
+static_sites:
+  - name: carecycle-frontend
+    build_command: |
+      echo "REACT_APP_API_BASE_URL=https://carecycle-2.onrender.com/api" > .env
+      npm install
+      npm run build
+    public_path: /build
+    env_vars:
+      - key: NODE_VERSION
+        value: 18.17.1
+    routes:
+      - type: rewrite
+        source: "/*"
+        destination: "/index.html"
