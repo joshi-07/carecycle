@@ -37,7 +37,12 @@ const Register = () => {
     try {
       const result = await register({ username, email, password });
       if (!result.success) {
-        setError(result.error || 'Registration failed');
+        const errorMsg = result.error;
+        if (Array.isArray(errorMsg)) {
+          setError(errorMsg.join(', '));
+        } else {
+          setError(errorMsg || 'Registration failed');
+        }
       } else {
         navigate('/login');
       }

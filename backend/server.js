@@ -115,6 +115,15 @@ app.use((err, req, res, next) => {
     });
   }
   
+  // Handle MongoDB duplicate key errors
+  if (err.code === 11000) {
+    const field = Object.keys(err.keyValue)[0];
+    return res.status(400).json({
+      success: false,
+      error: `${field.charAt(0).toUpperCase() + field.slice(1)} already exists`
+    });
+  }
+
   // Handle validation errors
   if (err.name === 'ValidationError') {
     const messages = Object.values(err.errors).map(val => val.message);
