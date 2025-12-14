@@ -36,8 +36,10 @@ const Register = () => {
 
     try {
       const result = await register({ username, email, password });
+      console.log('Registration result:', result);
       if (!result.success) {
         const errorMsg = result.error;
+        console.log('Error message:', errorMsg);
         if (Array.isArray(errorMsg)) {
           setError(errorMsg.join(', '));
         } else {
@@ -47,8 +49,8 @@ const Register = () => {
         navigate('/login');
       }
     } catch (err) {
+      console.error('Registration catch error:', err);
       setError('An error occurred during registration');
-      console.error('Registration error:', err);
     } finally {
       setLoading(false);
     }
