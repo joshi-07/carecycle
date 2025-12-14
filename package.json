@@ -1,0 +1,41 @@
+{
+  "name": "carecycle",
+  "version": "1.0.0",
+  "description": "CareCycle - Donation Management System",
+  "private": true,
+  "scripts": {
+    "install-all": "npm install && cd frontend && npm install && cd ../backend && npm install",
+    "client": "cd frontend && npm start",
+    "server": "cd backend && npm run dev",
+    "build": "cd frontend && npm run build",
+    "start": "cd backend && npm start",
+    "dev": "concurrently \"npm run server\" \"npm run client\"",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "workspaces": [
+    "frontend",
+    "backend"
+  ],
+  "devDependencies": {
+    "concurrently": "^8.2.0"
+  },
+  "engines": {
+    "node": ">=14.0.0",
+    "npm": ">=6.0.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/yourusername/carecycle.git"
+  },
+  "keywords": [
+    "donation",
+    "recycling",
+    "sustainability"
+  ],
+  "author": "",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/yourusername/carecycle/issues"
+  },
+  "homepage": "https://github.com/yourusername/carecycle#readme"
+}

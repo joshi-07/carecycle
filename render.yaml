@@ -1,0 +1,41 @@
+services:
+  - type: web
+    name: carecycle-backend
+    env: node
+    buildCommand: cd backend && npm install
+    startCommand: npm start
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: MONGODB_URI
+        fromDatabase:
+          name: carecycle-db
+          property: connectionString
+      - key: JWT_SECRET
+        generateValue: true
+      - key: FRONTEND_URL
+        value: https://carecycle-frontend.onrender.com
+    plan: free
+    numInstances: 1
+
+  - type: web
+    name: carecycle-frontend
+    env: node
+    buildCommand: cd frontend && npm install && npm run build
+    staticPublishPath: "./frontend/build"
+    envVars:
+      - key: REACT_APP_API_URL
+        value: https://carecycle-backend.onrender.com
+    routes:
+      - type: rewrite
+        source: /
+        destination: /index.html
+    plan: free
+    numInstances: 1
+
+databases:
+  - name: carecycle-db
+    databaseName: carecycle
+    user: carecycle_user
+    plan: free
+    ipAllowList: []
