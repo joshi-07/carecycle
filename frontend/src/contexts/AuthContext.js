@@ -4,7 +4,7 @@ import axios from 'axios';
 
 const AuthContext = createContext();
 
-const API_URL = process.env.REACT_APP_API_URL || 'https://carecycle-backend.onrender.com/api/v1';
+const API_URL = process.env.REACT_APP_API_URL || 'https://carecycle-2.onrender.com/api/v1';
 
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);

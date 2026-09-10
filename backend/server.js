@@ -92,8 +92,8 @@ connectDB();
 
 // Mount routers
 app.use('/api/v1/auth', authRoutes);
-app.use('/api/donations', donationRoutes);
-app.use('/api/admin', adminRoutes);
+app.use('/api/v1/donations', donationRoutes);
+app.use('/api/v1/admin', adminRoutes);
 
 // Error handling middleware
 app.use((err, req, res, next) => {

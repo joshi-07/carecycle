@@ -56,23 +56,14 @@ userSchema.pre('save', async function(next) {
 userSchema.methods.getSignedJwtToken = function() {
   return jwt.sign(
     { id: this._id, role: this.role },
-    process.env.JWT_SECRET,
-    { expiresIn: process.env.JWT_EXPIRE || '30d' }
+    process.env.JWT_SECRET || 'e8f5a7b3d2c1f9e8a7b6c5d4e3f2a1b0c9d8e7f6a5b4c3d2e1f0a9b8c7d6e5f4',
+    { expiresIn: process.env.JWT_EXPIRES_IN || '24h' }
   );
 };
 
 // Match user entered password to hashed password in database
 userSchema.methods.matchPassword = async function(enteredPassword) {
   return await bcrypt.compare(enteredPassword, this.password);
-};
-
-// Sign JWT and return
-userSchema.methods.getSignedJwtToken = function() {
-  return jwt.sign(
-    { id: this._id, role: this.role },
-    process.env.JWT_SECRET || 'e8f5a7b3d2c1f9e8a7b6c5d4e3f2a1b0c9d8e7f6a5b4c3d2e1f0a9b8c7d6e5f4',
-    { expiresIn: process.env.JWT_EXPIRES_IN || '24h' }
-  );
 };
 
 module.exports = mongoose.model('User', userSchema);
