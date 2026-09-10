@@ -24,11 +24,14 @@ const Donate = () => {
     e.preventDefault();
     setIsSubmitting(true);
     try {
-      await createDonation(formData);
+      const response = await createDonation(formData);
+      console.log('Donation response:', response);
       setMessage('Thank you for your tablet donation!');
       setFormData({ donorName: '', email: '', tabletName: '', expiryDate: '', unopened: false });
     } catch (error) {
-      setMessage('Error submitting donation. Please try again.');
+      console.error('Donation error:', error);
+      const errorMessage = error.response?.data?.error || error.message || 'Error submitting donation. Please try again.';
+      setMessage(errorMessage);
     } finally {
       setIsSubmitting(false);
     }

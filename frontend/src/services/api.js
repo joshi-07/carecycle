@@ -32,5 +32,6 @@ api.interceptors.response.use(
 export const createDonation = (data) => api.post('/donations', data);
 export const getDonations = () => api.get('/donations');
 export const verifyDonation = (id) => api.patch(`/donations/${id}/verify`);
+export const deleteDonation = (id) => api.delete(`/donations/${id}`);
 
 export default api;

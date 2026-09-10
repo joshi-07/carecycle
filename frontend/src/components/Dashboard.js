@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { getDonations, verifyDonation as verifyDonationApi } from '../services/api';
+import { getDonations, verifyDonation as verifyDonationApi, deleteDonation } from '../services/api';
 
 const Dashboard = () => {
   const [donations, setDonations] = useState([]);
@@ -16,8 +16,9 @@ const Dashboard = () => {
   const fetchDonations = async () => {
     try {
       const response = await getDonations();
-      setDonations(response.data);
-      calculateStats(response.data);
+      const donationsData = response.data.data || response.data;
+      setDonations(donationsData);
+      calculateStats(donationsData);
     } catch (error) {
       console.error('Error fetching donations:', error);
     } finally {
@@ -49,8 +50,7 @@ const Dashboard = () => {
 
   const confirmDelete = async () => {
     try {
-      // Add your delete API call here when ready
-      console.log('Deleting donation:', selectedDonation._id);
+      await deleteDonation(selectedDonation._id);
       setShowDeleteModal(false);
       fetchDonations();
     } catch (error) {
