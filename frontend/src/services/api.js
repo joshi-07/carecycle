@@ -7,9 +7,14 @@ const api = axios.create({
   },
 });
 
-// Add request interceptor for logging
+// Add request interceptor for auth token and logging
 api.interceptors.request.use(
   (config) => {
+    // Attach auth token if available (axios.create() does not inherit axios.defaults)
+    const token = localStorage.getItem('token');
+    if (token) {
+      config.headers['Authorization'] = `Bearer ${token}`;
+    }
     console.log('API Request:', config.method?.toUpperCase(), config.url);
     return config;
   },

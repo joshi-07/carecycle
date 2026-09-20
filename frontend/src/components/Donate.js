@@ -1,7 +1,9 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { createDonation } from '../services/api';
 
 const Donate = () => {
+  const navigate = useNavigate();
   const [formData, setFormData] = useState({
     donorName: '',
     email: '',
@@ -26,8 +28,12 @@ const Donate = () => {
     try {
       const response = await createDonation(formData);
       console.log('Donation response:', response);
-      setMessage('Thank you for your tablet donation!');
+      setMessage('Thank you for your tablet donation! Redirecting to dashboard...');
       setFormData({ donorName: '', email: '', tabletName: '', expiryDate: '', unopened: false });
+      // Redirect to dashboard after 2 seconds so the user can see their donation
+      setTimeout(() => {
+        navigate('/dashboard');
+      }, 2000);
     } catch (error) {
       console.error('Donation error:', error);
       const errorMessage = error.response?.data?.error || error.message || 'Error submitting donation. Please try again.';
