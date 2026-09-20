@@ -50,10 +50,23 @@ if (process.env.NODE_ENV !== 'test') {
 }
 
 // CORS configuration
+const allowedOrigins = process.env.NODE_ENV === 'production'
+  ? [
+      process.env.FRONTEND_URL || 'https://carecycle-frontend.onrender.com',
+      'https://carecycle-frontend.onrender.com',
+      'https://carecycle-2.onrender.com',
+    ].filter(Boolean)
+  : ['http://localhost:3000', 'http://localhost:5000'];
+
 const corsOptions = {
-  origin: process.env.NODE_ENV === 'production' 
-    ? [process.env.FRONTEND_URL || 'https://carecycle-frontend.onrender.com'] 
-    : ['http://localhost:3000', 'http://localhost:5000'],
+  origin: (origin, callback) => {
+    // Allow requests with no origin (e.g., mobile apps, Postman, curl)
+    if (!origin) return callback(null, true);
+    if (allowedOrigins.includes(origin)) {
+      return callback(null, true);
+    }
+    return callback(new Error(`CORS: origin ${origin} not allowed`));
+  },
   credentials: true,
   optionsSuccessStatus: 200
 };
