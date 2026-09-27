@@ -1,1 +1,22 @@
-node_modules
+# Dependencies
+node_modules/
+
+# Production build output (Render builds this during deploy)
+build/
+dist/
+
+# Caches
+.eslintcache
+.cache/
+*.tsbuildinfo
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# OS / editor
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
