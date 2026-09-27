@@ -1,16 +1,21 @@
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
+import { Link } from 'react-router-dom';
 import { createDonation } from '../services/api';
 
+const initialFormData = {
+  donorName: '',
+  email: '',
+  tabletName: '',
+  expiryDate: '',
+  unopened: false
+};
+
 const Donate = () => {
-  const [formData, setFormData] = useState({
-    donorName: '',
-    email: '',
-    tabletName: '',
-    expiryDate: '',
-    unopened: false
-  });
-  const [message, setMessage] = useState('');
+  const [formData, setFormData] = useState(initialFormData);
+  const [status, setStatus] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const today = useMemo(() => new Date().toISOString().split('T')[0], []);
 
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
@@ -22,158 +27,195 @@ const Donate = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setStatus(null);
+
+    const payload = {
+      donorName: formData.donorName.trim(),
+      email: formData.email.trim().toLowerCase(),
+      tabletName: formData.tabletName.trim(),
+      expiryDate: formData.expiryDate,
+      unopened: formData.unopened
+    };
+
+    if (!payload.donorName || !payload.email || !payload.tabletName || !payload.expiryDate) {
+      setStatus({ type: 'error', text: 'Please fill in every required field.' });
+      return;
+    }
+
+    if (payload.expiryDate < today) {
+      setStatus({ type: 'error', text: 'Please enter a tablet expiry date that has not already passed.' });
+      return;
+    }
+
     setIsSubmitting(true);
+
     try {
-      const response = await createDonation(formData);
-      console.log('Donation response:', response);
-      setMessage('Thank you for your tablet donation!');
-      setFormData({ donorName: '', email: '', tabletName: '', expiryDate: '', unopened: false });
+      await createDonation(payload);
+      setStatus({ type: 'success', text: 'Thank you. Your tablet donation was submitted successfully.' });
+      setFormData(initialFormData);
     } catch (error) {
-      console.error('Donation error:', error);
-      const errorMessage = error.response?.data?.error || error.message || 'Error submitting donation. Please try again.';
-      setMessage(errorMessage);
+      const apiError = error.response?.data?.error || error.response?.data?.message || error.message;
+      setStatus({
+        type: 'error',
+        text: Array.isArray(apiError) ? apiError.join(', ') : apiError || 'Error submitting donation. Please try again.'
+      });
     } finally {
       setIsSubmitting(false);
     }
   };
 
   return (
-    <div className="max-w-lg mx-auto py-16 px-4 sm:px-6 lg:px-8">
-      <div className="bg-white shadow-xl rounded-2xl p-8 border border-gray-100">
-        <div className="text-center mb-8">
-          <div className="w-16 h-16 bg-gradient-to-r from-indigo-500 to-purple-600 rounded-full flex items-center justify-center mx-auto mb-4">
-            <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-            </svg>
-          </div>
-          <h2 className="text-3xl font-bold text-gray-900 mb-2">Make a Tablet Donation</h2>
-          <p className="text-gray-600">Your tablet donation helps create lasting change in communities worldwide.</p>
-        </div>
-
-        {message && (
-          <div className={`mb-6 p-4 rounded-lg border ${message.includes('Thank you') ? 'bg-green-50 border-green-200 text-green-800' : 'bg-red-50 border-red-200 text-red-800'}`}>
-            <div className="flex items-center">
-              {message.includes('Thank you') ? (
-                <svg className="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
-                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                </svg>
-              ) : (
-                <svg className="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
-                  <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
-                </svg>
-              )}
-              {message}
-            </div>
-          </div>
-        )}
-
-        <form onSubmit={handleSubmit} className="space-y-6">
-          <div>
-            <label htmlFor="donorName" className="block text-sm font-semibold text-gray-700 mb-2">
-              Donor Name
-            </label>
-            <input
-              type="text"
-              id="donorName"
-              name="donorName"
-              value={formData.donorName}
-              onChange={handleChange}
-              required
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors"
-              placeholder="Enter donor name"
-            />
-          </div>
-
-          <div>
-            <label htmlFor="email" className="block text-sm font-semibold text-gray-700 mb-2">
-              Email Address
-            </label>
-            <input
-              type="email"
-              id="email"
-              name="email"
-              value={formData.email}
-              onChange={handleChange}
-              required
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors"
-              placeholder="Enter your email"
-            />
-          </div>
-
-          <div>
-            <label htmlFor="tabletName" className="block text-sm font-semibold text-gray-700 mb-2">
-              Tablet Name
-            </label>
-            <input
-              type="text"
-              id="tabletName"
-              name="tabletName"
-              value={formData.tabletName}
-              onChange={handleChange}
-              required
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors"
-              placeholder="Enter tablet name"
-            />
-          </div>
-
-          <div>
-            <label htmlFor="expiryDate" className="block text-sm font-semibold text-gray-700 mb-2">
-              Expiry Date
-            </label>
-            <input
-              type="date"
-              id="expiryDate"
-              name="expiryDate"
-              value={formData.expiryDate}
-              onChange={handleChange}
-              required
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors"
-            />
-          </div>
-
-          <div className="flex items-center">
-            <input
-              type="checkbox"
-              id="unopened"
-              name="unopened"
-              checked={formData.unopened}
-              onChange={handleChange}
-              className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"
-            />
-            <label htmlFor="unopened" className="ml-2 block text-sm text-gray-700">
-              Unopened package
-            </label>
-          </div>
-
-          <button
-            type="submit"
-            disabled={isSubmitting}
-            className="w-full bg-gradient-to-r from-indigo-600 to-purple-600 text-white py-4 px-6 rounded-lg font-semibold hover:from-indigo-700 hover:to-purple-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 transform hover:scale-105"
-          >
-            {isSubmitting ? (
-              <div className="flex items-center justify-center">
-                <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                </svg>
-                Processing...
-              </div>
-            ) : (
-              <div className="flex items-center justify-center">
-                Donate Now
-                <svg className="ml-2 -mr-1 w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-                  <path fillRule="evenodd" d="M10.293 3.293a1 1 0 011.414 0l6 6a1 1 0 010 1.414l-6 6a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-4.293-4.293a1 1 0 010-1.414z" clipRule="evenodd" />
-                </svg>
-              </div>
-            )}
-          </button>
-        </form>
-
-        <div className="mt-8 text-center">
-          <p className="text-sm text-gray-500">
-            Your donation is secure and tax-deductible. All transactions are processed through encrypted channels.
+    <div className="relative overflow-hidden px-4 py-12 sm:px-6 lg:px-8">
+      <div className="absolute inset-0 -z-10 bg-[radial-gradient(circle_at_top_right,_#c7d2fe,_transparent_28%),radial-gradient(circle_at_bottom_left,_#bbf7d0,_transparent_30%)]" />
+      <div className="mx-auto grid max-w-6xl gap-8 lg:grid-cols-[0.9fr_1.1fr] lg:items-center">
+        <section className="rounded-[2rem] bg-slate-950 p-8 text-white shadow-2xl shadow-slate-300 sm:p-10">
+          <p className="inline-flex rounded-full bg-emerald-400/15 px-4 py-2 text-sm font-bold text-emerald-200 ring-1 ring-emerald-300/20">
+            Safe donation checklist
           </p>
-        </div>
+          <h1 className="mt-8 text-4xl font-black tracking-tight sm:text-5xl">
+            Donate tablets with confidence.
+          </h1>
+          <p className="mt-5 text-lg leading-8 text-slate-300">
+            Submit basic tablet details so volunteers can verify quality, track the donation, and route it responsibly.
+          </p>
+
+          <div className="mt-10 grid gap-4">
+            {[
+              ['1', 'Enter donor and tablet details'],
+              ['2', 'Confirm the package is unopened if applicable'],
+              ['3', 'Submit for volunteer verification']
+            ].map(([number, text]) => (
+              <div key={number} className="flex items-center gap-4 rounded-2xl bg-white/10 p-4 ring-1 ring-white/10">
+                <span className="flex h-10 w-10 items-center justify-center rounded-full bg-white text-sm font-black text-slate-950">
+                  {number}
+                </span>
+                <span className="font-semibold text-slate-100">{text}</span>
+              </div>
+            ))}
+          </div>
+        </section>
+
+        <section className="rounded-[2rem] border border-white/70 bg-white/90 p-6 shadow-2xl shadow-indigo-200/40 backdrop-blur sm:p-8 lg:p-10">
+          <div className="mb-8">
+            <p className="text-sm font-bold uppercase tracking-[0.3em] text-indigo-600">Donation form</p>
+            <h2 className="mt-3 text-3xl font-black tracking-tight text-slate-950">Tablet information</h2>
+            <p className="mt-3 text-slate-600">
+              Fields marked by the form are required. You can submit a donation even before creating an account.
+            </p>
+          </div>
+
+          {status && (
+            <div
+              className={`mb-6 rounded-2xl border px-4 py-3 text-sm font-semibold ${
+                status.type === 'success'
+                  ? 'border-emerald-200 bg-emerald-50 text-emerald-800'
+                  : 'border-red-200 bg-red-50 text-red-700'
+              }`}
+              role="alert"
+            >
+              {status.text}
+            </div>
+          )}
+
+          <form onSubmit={handleSubmit} className="space-y-5">
+            <div className="grid gap-5 sm:grid-cols-2">
+              <div>
+                <label htmlFor="donorName" className="block text-sm font-bold text-slate-700">
+                  Donor name
+                </label>
+                <input
+                  type="text"
+                  id="donorName"
+                  name="donorName"
+                  value={formData.donorName}
+                  onChange={handleChange}
+                  required
+                  className="mt-2 w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-slate-950 shadow-sm outline-none transition focus:border-indigo-500 focus:ring-4 focus:ring-indigo-100"
+                  placeholder="Your full name"
+                />
+              </div>
+
+              <div>
+                <label htmlFor="email" className="block text-sm font-bold text-slate-700">
+                  Email address
+                </label>
+                <input
+                  type="email"
+                  id="email"
+                  name="email"
+                  value={formData.email}
+                  onChange={handleChange}
+                  required
+                  className="mt-2 w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-slate-950 shadow-sm outline-none transition focus:border-indigo-500 focus:ring-4 focus:ring-indigo-100"
+                  placeholder="you@example.com"
+                />
+              </div>
+            </div>
+
+            <div>
+              <label htmlFor="tabletName" className="block text-sm font-bold text-slate-700">
+                Tablet name
+              </label>
+              <input
+                type="text"
+                id="tabletName"
+                name="tabletName"
+                value={formData.tabletName}
+                onChange={handleChange}
+                required
+                className="mt-2 w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-slate-950 shadow-sm outline-none transition focus:border-indigo-500 focus:ring-4 focus:ring-indigo-100"
+                placeholder="Medicine or tablet strip name"
+              />
+            </div>
+
+            <div>
+              <label htmlFor="expiryDate" className="block text-sm font-bold text-slate-700">
+                Expiry date
+              </label>
+              <input
+                type="date"
+                id="expiryDate"
+                name="expiryDate"
+                value={formData.expiryDate}
+                min={today}
+                onChange={handleChange}
+                required
+                className="mt-2 w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-slate-950 shadow-sm outline-none transition focus:border-indigo-500 focus:ring-4 focus:ring-indigo-100"
+              />
+            </div>
+
+            <label htmlFor="unopened" className="flex cursor-pointer items-start gap-3 rounded-2xl border border-slate-200 bg-slate-50 p-4 transition hover:border-indigo-200 hover:bg-indigo-50/70">
+              <input
+                type="checkbox"
+                id="unopened"
+                name="unopened"
+                checked={formData.unopened}
+                onChange={handleChange}
+                className="mt-1 h-5 w-5 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500"
+              />
+              <span>
+                <span className="block font-bold text-slate-800">The package is unopened</span>
+                <span className="mt-1 block text-sm text-slate-600">This helps volunteers prioritize items that can be verified faster.</span>
+              </span>
+            </label>
+
+            <button
+              type="submit"
+              disabled={isSubmitting}
+              className="w-full rounded-2xl bg-gradient-to-r from-indigo-600 to-violet-600 px-6 py-4 text-base font-black text-white shadow-xl shadow-indigo-200 transition hover:-translate-y-0.5 hover:from-indigo-700 hover:to-violet-700 focus:outline-none focus:ring-4 focus:ring-indigo-200 disabled:cursor-not-allowed disabled:opacity-60"
+            >
+              {isSubmitting ? 'Submitting donation...' : 'Submit donation'}
+            </button>
+          </form>
+
+          <p className="mt-6 text-center text-sm text-slate-500">
+            Want to manage submitted items?{' '}
+            <Link to="/register" className="font-bold text-indigo-700 hover:text-indigo-900">
+              Create an account
+            </Link>
+            .
+          </p>
+        </section>
       </div>
     </div>
   );

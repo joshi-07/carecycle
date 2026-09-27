@@ -3,42 +3,43 @@ import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 
 const AuthContext = createContext();
+const API_URL = process.env.REACT_APP_API_BASE_URL || process.env.REACT_APP_API_URL || 'https://carecycle-2.onrender.com/api/v1';
 
-const API_URL = process.env.REACT_APP_API_URL || 'https://carecycle-2.onrender.com/api/v1';
+const getErrorMessage = (err, fallback) => {
+  const error = err.response?.data?.error || err.response?.data?.message || err.message;
+  return Array.isArray(error) ? error.join(', ') : error || fallback;
+};
 
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [token, setToken] = useState(localStorage.getItem('token') || '');
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
   const navigate = useNavigate();
 
-  // Set auth token in headers
-  const setAuthToken = (token) => {
-    if (token) {
-      axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
-      localStorage.setItem('token', token);
+  const setAuthToken = (newToken) => {
+    if (newToken) {
+      axios.defaults.headers.common.Authorization = `Bearer ${newToken}`;
+      localStorage.setItem('token', newToken);
     } else {
-      delete axios.defaults.headers.common['Authorization'];
+      delete axios.defaults.headers.common.Authorization;
       localStorage.removeItem('token');
     }
   };
 
-  // Load user
   const loadUser = async () => {
     try {
       setAuthToken(token);
       const res = await axios.get(`${API_URL}/auth/me`);
-      setUser(res.data.user);
+      setUser(res.data.user || res.data.data);
     } catch (err) {
-      console.error('Error loading user', err);
-      logout();
+      setToken('');
+      setAuthToken('');
+      setUser(null);
     } finally {
       setLoading(false);
     }
   };
 
-  // Register user
   const register = async (formData) => {
     try {
       const res = await axios.post(`${API_URL}/auth/register`, formData);
@@ -50,12 +51,11 @@ export const AuthProvider = ({ children }) => {
     } catch (err) {
       return {
         success: false,
-        error: err.response?.data?.error || 'Registration failed'
+        error: getErrorMessage(err, 'Registration failed')
       };
     }
   };
 
-  // Login user
   const login = async (formData) => {
     try {
       const res = await axios.post(`${API_URL}/auth/login`, formData);
@@ -67,12 +67,11 @@ export const AuthProvider = ({ children }) => {
     } catch (err) {
       return {
         success: false,
-        error: err.response?.data?.error || 'Login failed'
+        error: getErrorMessage(err, 'Login failed')
       };
     }
   };
 
-  // Logout user
   const logout = () => {
     setToken('');
     setAuthToken('');
@@ -80,24 +79,16 @@ export const AuthProvider = ({ children }) => {
     navigate('/login');
   };
 
-  // Check if user is authenticated
-  const isAuthenticated = () => {
-    return !!token;
-  };
+  const isAuthenticated = () => !!token;
+  const hasRole = (role) => user?.role === role;
 
-  // Check if user has specific role
-  const hasRole = (role) => {
-    return user?.role === role;
-  };
-
-  // Load user on mount and when token changes
   useEffect(() => {
     if (token) {
       loadUser();
     } else {
       setLoading(false);
     }
-    // eslint-disable-next-line
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [token]);
 
   return (
@@ -106,7 +97,6 @@ export const AuthProvider = ({ children }) => {
         user,
         token,
         loading,
-        error,
         register,
         login,
         logout,
@@ -119,8 +109,6 @@ export const AuthProvider = ({ children }) => {
   );
 };
 
-export const useAuth = () => {
-  return useContext(AuthContext);
-};
+export const useAuth = () => useContext(AuthContext);
 
 export default AuthContext;
