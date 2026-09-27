@@ -90,6 +90,21 @@ mongoose.connection.on('disconnected', () => {
 // Initialize DB connection
 connectDB();
 
+// Health check
+const DB_STATES = { 0: 'disconnected', 1: 'connected', 2: 'connecting', 3: 'disconnecting' };
+const healthCheck = (req, res) => {
+  res.json({
+    status: 'ok',
+    service: 'carecycle-backend',
+    database: DB_STATES[mongoose.connection.readyState] || 'unknown',
+    uptime: process.uptime(),
+    timestamp: new Date().toISOString()
+  });
+};
+app.get('/', healthCheck);
+app.get('/health', healthCheck);
+app.get('/api/v1/health', healthCheck);
+
 // Mount routers
 app.use('/api/v1/auth', authRoutes);
 app.use('/api/v1/donations', donationRoutes);
