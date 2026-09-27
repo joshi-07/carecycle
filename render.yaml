@@ -13,6 +13,10 @@ services:
           property: connectionString
       - key: JWT_SECRET
         generateValue: true
+      - key: JWT_EXPIRES_IN
+        value: 24h
+      - key: JWT_COOKIE_EXPIRE
+        value: "30"
       - key: FRONTEND_URL
         value: https://carecycle-frontend.onrender.com
     plan: free
@@ -24,8 +28,10 @@ services:
     buildCommand: cd frontend && npm install && npm run build
     staticPublishPath: "./frontend/build"
     envVars:
+      - key: REACT_APP_API_BASE_URL
+        value: https://carecycle-2.onrender.com/api/v1
       - key: REACT_APP_API_URL
-        value: https://carecycle-backend.onrender.com
+        value: https://carecycle-2.onrender.com/api/v1
     routes:
       - type: rewrite
         source: /
